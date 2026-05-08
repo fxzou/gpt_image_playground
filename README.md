@@ -80,7 +80,7 @@
 <details>
 <summary><strong>▲ 方式一：Vercel 一键部署 (推荐)</strong></summary>
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FCookSleep%2Fgpt_image_playground&project-name=gpt-image-playground&repository-name=gpt-image-playground)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%fxzou%2Fgpt_image_playground&project-name=gpt-image-playground&repository-name=gpt-image-playground)
 
 点击上方按钮导入仓库即可，Vercel 会自动执行构建并部署静态文件。
 
