@@ -1,5 +1,7 @@
-import { ensureImageCached } from '../store'
 import { zipSync } from 'fflate'
+import type { TaskRecord } from '../types'
+import { ensureImageCached } from '../store'
+import { getNumberedFileNameBase, sanitizeFileNamePart } from './exportFileName'
 
 const MIME_EXTENSIONS: Record<string, string> = {
   'image/png': 'png',
@@ -18,10 +20,9 @@ export interface DownloadImageZipEntry {
   fileNameBase?: string
 }
 
-export function formatExportFileTime(date: Date): string {
-  const pad = (value: number) => String(value).padStart(2, '0')
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}_${pad(date.getHours())}-${pad(date.getMinutes())}-${pad(date.getSeconds())}`
-}
+type TaskOutputZipTask = Pick<TaskRecord, 'id' | 'createdAt' | 'outputImages'>
+
+export { formatExportFileTime } from './exportFileName'
 
 export async function downloadImageIds(imageIds: string[], fileNameBase = 'images'): Promise<DownloadImagesResult> {
   if (imageIds.length === 0) return { successCount: 0, failCount: 0 }
@@ -88,6 +89,19 @@ export async function downloadImageEntriesAsZip(entries: DownloadImageZipEntry[]
   return { successCount, failCount }
 }
 
+export function getTaskOutputImageZipEntries(tasks: TaskOutputZipTask[]): DownloadImageZipEntry[] {
+  return [...tasks]
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .flatMap((task) => getImageZipEntries(task.outputImages || [], `task-${task.id}`))
+}
+
+export function getImageZipEntries(imageIds: string[], fileNameBase = 'image'): DownloadImageZipEntry[] {
+  return imageIds.map((imageId, index) => ({
+    imageId,
+    fileNameBase: getNumberedFileNameBase(fileNameBase, index, imageIds.length),
+  }))
+}
+
 async function getImageBlob(imageIdOrUrl: string): Promise<Blob> {
   let src = imageIdOrUrl
   if (!imageIdOrUrl.startsWith('data:') && !imageIdOrUrl.startsWith('http://') && !imageIdOrUrl.startsWith('https://')) {
@@ -112,10 +126,6 @@ function triggerDownload(blob: Blob, fileName: string) {
 
 function getBlobExtension(blob: Blob): string {
   return MIME_EXTENSIONS[blob.type.toLowerCase()] ?? blob.type.split('/')[1] ?? 'png'
-}
-
-function sanitizeFileNamePart(value: string): string {
-  return value.trim().replace(/[<>:"/\\|?*\x00-\x1f]+/g, '-').replace(/\s+/g, ' ').slice(0, 120)
 }
 
 function delay(ms: number) {
